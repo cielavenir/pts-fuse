@@ -1,4 +1,4 @@
-#! /usr/bin/python2.4 --
+#! /usr/bin/python --
 # by pts@fazekas.hu at Sat Nov 14 10:50:42 CET 2009
 
 import errno
