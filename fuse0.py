@@ -713,6 +713,13 @@ class Server(object):
       raise TypeError
     config.Validate()
     print >>sys.stderr, 'info: mounting FUSE to %s' % config.mount_point
+    try:
+      stat_obj = os.lstat(config.mount_point)
+    except OSError, e:
+      raise RuntimeError('mount point missing: %s' % config.mount_mount)
+    if not stat.S_ISDIR(stat_obj.st_mode):
+      # fusermount(8) also checks this.
+      raise RuntimeError('mount point is not a directory: %s' % config.mount_point)
     fd = FuseMount(config.mount_prog, config.mount_point, config.mount_opts)
     # TODO(pts): call FuseUnmount(() when we die (in a finally: block)
     assert stat.S_ISCHR(os.fstat(fd).st_mode)
