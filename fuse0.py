@@ -263,16 +263,18 @@ def QuoteShellWord(data):
   return "'%s'" % data.replace("'", "'\\''")
 
 
-def FuseUnmount(mount_prog, mount_point):
+def FuseUnmount(mount_prog, mount_point, is_silent=False):
   """Unmount a FUSE filesystem."""
   if not isinstance(mount_point, str):
     raise TypeError
   if "'" in mount_point:
     raise ValueError
 
-  assert not os.system(
-      '%s -u %s' % (mount_prog, QuoteShellWord(mount_point))), (
-      'unmount with fusermount failed (see above)')
+  status = os.system(
+      '%s -u %s' % (mount_prog, QuoteShellWord(mount_point))),
+  if status and not is_silent:
+    raise RuntimeError('unmount with fusermount failed (see above)')
+  return status
 
 
 def FuseMount(mount_prog, mount_point, mount_opts):
@@ -661,6 +663,11 @@ class Server(object):
     # This dict caches the output of HandleListDir until the FUSE client
     # reads it (and calls FUSE_RELEASEDIR).
     self.dirh_to_dirent_data = {}
+
+  def Close(self):
+    if self.fd >= 0:
+      os.close(self.fd)
+      self.fd = -1
 
   def WriteReply(self, data='', errno_num=None):
     """Build and write reply packet after a preceding Read()."""
@@ -1200,13 +1207,25 @@ def main(argv):
     print >>sys.stderr, 'Usage: %s [-o <mount_opts>] <mount-point>' % argv[0]
     sys.exit(1)
   config.mount_point = argv[1]
-  fin = DemoServer.MountAndOpen(config).Populate()
-
-  # TODO(pts): Users get EBUSY when accessing the mount point too early
-  # (right after a few seconds).
-  print >>sys.stderr, 'info: processing requests (indefinitely, ^C to abort)'
-  fin.ServeUntilUnmounted()
-  print >>sys.stderr, 'info: filesystem unmounted, exiting'
+  do_unmount, fin = True, None
+  try:
+    try:
+      fin = DemoServer.MountAndOpen(config).Populate()
+      # TODO(pts): Users get EBUSY when accessing the mount point too early
+      # (right after a few seconds).
+      print >>sys.stderr, 'info: processing requests (indefinitely, ^C to abort)'
+      fin.ServeUntilUnmounted()
+      do_unmount = False  # Already done.
+      print >>sys.stderr, 'info: filesystem unmounted, exiting'
+    except KeyboardInterrupt:
+      print >>sys.stderr, '\ninfo: ^C pressed, aborting'
+      sys.exit(2)
+  finally:
+    if fin:
+      fin.Close()
+    if do_unmount:
+      # This may fail with -EBUSY if users are using it.
+      FuseUnmount(config.mount_prog, config.mount_point, is_silent=True)
 
 
 if __name__ == '__main__':
