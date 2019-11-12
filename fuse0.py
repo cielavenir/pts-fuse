@@ -9,24 +9,6 @@ import stat
 import struct
 import sys
 
-# !! Have a look at passfd.c in Neil Schemenauer's SCGI protocol implementation:
-#http://www.mems-exchange.org/software/scgi/
-#It wraps sendmsg/recvmsg to send and receive file descriptors.
-#
-#It's a C module, but's it's very lightweight. I think it does what you
-#want to do (the test_passfd.py is almost exactly like the script you
-#posted; showing their common ancestors...) It's supposed to work under
-#Linux, FreeBSD and Solaris.
-try:
-  import _receive_fd
-except ImportError, e:
-  if str(e) == 'No module named _receive_fd':
-    print >>sys.stderr, (
-        'error: please compile receive_fd.c to an .so file first')
-    sys.exit(2)
-  else:
-    raise
-
 """A FUSE filesystem library in Python not using libfuse.
 
 FUSE (/dev/fuse) protocol documentation:

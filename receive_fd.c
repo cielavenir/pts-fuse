@@ -7,7 +7,15 @@
  * reveive_fd.c: Python module to receive a filehandle over an AF_UNIX socket.
  * by pts@fazekas.hu at Sat Nov 14 11:57:04 CET 2009
  *
- * Compile with:
+ * Advice beforeimplementing this module: Have a look at passfd.c in Neil
+ * Schemenauer's SCGI protocol implementation:
+ * http://www.mems-exchange.org/software/scgi/ It wraps sendmsg/recvmsg to
+ * send and receive file descriptors.
+ *
+ * It's a C module, but's it's very lightweight. I think it does what you
+ * want to do (the test_passfd.py is almost exactly like the script you
+ * posted; showing their common ancestors...) It's supposed to work under
+ * Linux, FreeBSD and Solaris.
  * 
  */
 
