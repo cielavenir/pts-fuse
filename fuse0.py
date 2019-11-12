@@ -688,7 +688,13 @@ class Server(object):
   def NegotiateInit(self):
     self.Read()
     assert self.opcode == FUSE_INIT
-    #print (self.init_major, self.init_minor)  # (7L, 8L) on lila
+    # 7.8 on Linux 2.6.35.
+    # 7.22 on Linux 3.31.0.
+    # 7.26 on Linux 4.9.0.
+    # 7.27 on Linux 4.19.37.
+    print >>sys.stderr, 'info: FUSE versions: kernel=%d.%d lib=%d.%d' % (
+        self.init_major, self.init_minor,
+        FUSE_KERNEL_VERSION, FUSE_KERNEL_MINOR_VERSION)
     assert self.init_major == FUSE_KERNEL_VERSION, (
         'major version mismatch: kernel=%d.%d lib=%d.%d' %
         (self.init_major, self.init_minor,
