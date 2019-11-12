@@ -1147,7 +1147,7 @@ class DemoServer(Server):
 
   def HandleOpenDir(self):
     dir_contents = self.dir_contents.get(self.nodeid)
-    if self.dir_contents is not None:
+    if dir_contents is not None:
       return ''
     elif self.nodeid in self.nodes:
       return errno.ENOTDIR
@@ -1156,7 +1156,7 @@ class DemoServer(Server):
 
   def HandleListDir(self):
     dir_contents = self.dir_contents.get(self.nodeid)
-    if self.dir_contents is not None:
+    if dir_contents is not None:
       return dir_contents
     elif self.nodeid in self.nodes:
       return errno.ENOTDIR
