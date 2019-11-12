@@ -226,20 +226,35 @@ def ReceiveFdUsingCustomReceiveFdSo(from_fd):
   except OSError, e:
     raise ReceiveFdError(str(e))
 
+def ReceiveFdUsingMultiprocessing(from_fd):
+  try:
+    d = __import__('_multiprocessing')
+  except ImportError:
+    raise ReceiveFdPlatformError('module _multiprocessing not found')
+  if not callable(getattr(d, 'recvfd', None)):
+    raise ReceiveFdPlatformError('no function _multiprocessing.recvfd')
+  try:
+    return d.recvfd(from_fd)
+  except OSError, e:
+    raise ReceiveFdError(str(e))
+
 def ReceiveFd(from_fd):
   try:
-    return ReceiveFdUsingCtypes(from_fd)
+    return ReceiveFdUsingMultiprocessing(from_fd)
   except ReceiveFdPlatformError, e:
     try:
-      return ReceiveFdUsingDl(from_fd)
-    except ReceiveFdPlatformError, f:
+      return ReceiveFdUsingCtypes(from_fd)
+    except ReceiveFdPlatformError, e:
       try:
-        return ReceiveFdUsingCustomReceiveFdSo(from_fd)
-      except ReceiveFdPlatformError, g:
-        print >>sys.stderr, (
-            'error: cannot find receive_fd implementation '
-            '(%s; %s; %s), try compiling receive_fd.c' % (e, f, g))
-        sys.exit(2)
+        return ReceiveFdUsingDl(from_fd)
+      except ReceiveFdPlatformError, f:
+        try:
+          return ReceiveFdUsingCustomReceiveFdSo(from_fd)
+        except ReceiveFdPlatformError, g:
+          print >>sys.stderr, (
+              'error: cannot find receive_fd implementation '
+              '(%s; %s; %s), try compiling receive_fd.c' % (e, f, g))
+          sys.exit(2)
 
 
 def QuoteShellWord(data):
