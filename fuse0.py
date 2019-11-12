@@ -271,7 +271,7 @@ def FuseUnmount(mount_prog, mount_point):
     raise ValueError
 
   assert not os.system(
-      '%s -u \'%s\'' % (mount_prog, QuoteShellWord(mount_point))), (
+      '%s -u %s' % (mount_prog, QuoteShellWord(mount_point))), (
       'unmount with fusermount failed (see above)')
 
 
