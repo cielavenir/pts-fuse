@@ -793,8 +793,10 @@ class Server(object):
       self.release_fh, self.release_flags = (
           struct.unpack('=QL', data[:12]))
     elif self.opcode == FUSE_LOOKUP:
-      if data and data[-1] == '\0':
-        self.lookup_name = data[:-1]  # Get rid of terminating \n
+      if data:
+        while data[-1] == '\0':
+          data = data[:-1]  # Get rid of terminating \n
+        self.lookup_name = data
     elif self.opcode == FUSE_FORGET:
       # struct fuse_forget_in
       if len(data) < 8:
