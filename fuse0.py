@@ -9,6 +9,8 @@ import stat
 import struct
 import sys
 
+import subprocess
+
 """A FUSE filesystem library in Python not using libfuse.
 
 FUSE (/dev/fuse) protocol documentation:
@@ -270,8 +272,8 @@ def FuseUnmount(mount_prog, mount_point, is_silent=False):
   if "'" in mount_point:
     raise ValueError
 
-  status = os.system(
-      '%s -u %s' % (mount_prog, QuoteShellWord(mount_point))),
+  status = subprocess.call(
+      '%s -u %s' % (mount_prog, QuoteShellWord(mount_point)), shell=True)
   if status and not is_silent:
     raise RuntimeError('unmount with fusermount failed (see above)')
   return status
@@ -311,9 +313,9 @@ def FuseMount(mount_prog, mount_point, mount_opts):
   try:
     # This fails when already mounted (even if not connected):
     # fusermount: failed to access mountpoint ...: Permission denied
-    assert not os.system('export _FUSE_COMMFD=%s; %s%s %s' %
-        (fd0.fileno(), mount_prog, opt_str, QuoteShellWord(mount_point))), (
-        'fusermount failed (see above)')
+    subprocess.check_call('export _FUSE_COMMFD=%s; %s%s %s' %
+        (fd0.fileno(), mount_prog, opt_str, QuoteShellWord(mount_point)), shell=True)
+    #, (fusermount failed (see above)')
     return ReceiveFd(fd1.fileno())
   finally:
     fd0.close()
